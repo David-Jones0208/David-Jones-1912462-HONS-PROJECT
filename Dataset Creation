@@ -1,0 +1,159 @@
+from google.colab import drive
+drive.mount('/content/drive')
+
+# Import required libraries
+import pandas as pd
+import numpy as np
+from PIL import Image
+import matplotlib.pyplot as plt
+import os
+from sklearn.model_selection import train_test_split
+import tensorflow as tf
+
+# Create a DF
+data = {
+    'First_Name': ['Gareth', 'David', 'Kenny', 'Didier', 'Zlatan', 'Kylian',
+                   'Lionel', 'Willie', 'Bojan', 'Cristiano'],
+
+    'Sur_Name': ['Bale', 'Beckham', 'Dalglish', 'Drogba', 'Ibrahimovic', 'Mbappe',
+                  'Messi', 'Miller', 'Miovski', 'Ronaldo'],
+
+    'Age': [34, 48, 72, 45, 42, 25, 36, 68, 24, 39],
+
+    'Nation': ['Wales', 'England', 'Scotland', 'Ivory Coast', 'Sweden', 'France',
+                'Argentina', 'Scotland', 'North Macedonia', 'Portugal'],
+
+    'Current_club': ['N/a', 'N/a', 'N/a', 'N/a', 'N/a', 'PSG',
+                     'Inter Miami', 'N/a', 'Aberdeen', 'Al Nassr'],
+
+    'Position': ['Winger', 'Midfielder', 'Striker', 'Striker', 'Striker', 'Striker',
+                  'Winger', 'Winger', 'Defender,', 'Striker'],
+
+    'Goals': [185, 127, 229, 302, 496, 273, 821, 22, 64, 745],
+
+    'Former_clubs': ['LAFC, Real Madrid, Tottenham, Southampton',
+                     'PSG, LA Galaxy, AC Milan, Real Madrid, Man Utd',
+                     'Liverpool, Celtic',
+                     'Phoneix, Montreal, Chelsea, Galatasaray, Shaghai, Marseille, Guingamp, Le Mans',
+                     'AC Milan, LA Galaxy, Man Utd, PSG, Barcelona, Inter Milan, Juventus, Ajax, Malmo',
+                     'Monaco',
+                     'PSG, Barcelona',
+                     'Aberdeen, Peterhead',
+                     'MTK, Renova, Makedonija, Rabotnichki, Bregalnica',
+                     'Man Utd, Juventus, Real Madrid, Sporting Lisbon'],
+
+
+}
+df = pd.DataFrame(data)
+
+# Save DataFrame to CSV
+df.to_csv('data.csv', index=False)
+
+df
+
+# The path to image directory
+base_dir = '/content/drive/MyDrive/Hons_Images'  # adjust this to your actual path
+
+# the list of subdirectories in the base directory
+folders = [d for d in os.listdir(base_dir) if os.path.isdir(os.path.join(base_dir, d))]
+
+# Load existing Df
+df = pd.read_csv('data.csv')  # replace with the path to your CSV file
+
+# Add a new column for the image paths
+df['Image_Paths'] = pd.Series(dtype=object)
+
+for folder in folders:
+    # Get the list of image files in the folder
+    image_files = [os.path.join(base_dir, folder, f) for f in os.listdir(os.path.join(base_dir, folder)) if f.endswith('.jpg')]  # adjust this if your images are not in .jpg format
+
+    # Find the rows in the DataFrame where 'Sur_Name' matches the folder name
+    matches = df['Sur_Name'] == folder
+
+    # If matches are found, add the image paths to the 'Image_Paths' column for each matching row
+    for idx in df.index[matches]:
+        df.at[idx, 'Image_Paths'] = [image_files]
+
+# Save DataFrame to CSV
+df.to_csv('existing_dataframe.csv', index=False)
+
+print(df)
+
+# # Load DataFrame from CSV
+# df = pd.read_csv('existing_dataframe.csv')  # replace with the path to your CSV file
+
+
+# # Choose a surname
+# surname = 'Miller'
+
+# # Select the row from the DataFrame
+# row = df[df['Sur_Name'] == surname].iloc[0]
+
+# # Get the list of image paths from the 'Image_Paths' column
+# image_paths = eval(row['Image_Paths'])  # use eval to convert the string back into a list
+
+# # Flatten the list of image paths
+# image_paths = [item for sublist in image_paths for item in sublist]
+
+# # Loop over each image path
+# for image_path in image_paths:
+#     # Open the image file
+#     img = Image.open(image_path)
+
+#     # Display the image
+#     #plt.imshow(img)
+    #plt.show()
+
+
+# # Load DataFrame from CSV
+# df = pd.read_csv('existing_dataframe.csv')  # replace with the path to your CSV file
+
+# # Define the new size
+# new_size = (224, 224)
+
+# # Loop over each row in the DataFrame
+# for i, row in df.iterrows():
+#     # Get the list of image paths from the 'Image_Paths' column
+#     image_paths = eval(row['Image_Paths'])  # use eval to convert the string back into a list
+
+#     # Flatten the list of image paths
+#     image_paths = [item for sublist in image_paths for item in sublist]
+
+#     # Loop over each image path
+#     for image_path in image_paths:
+#         # Open the image file
+#         img = Image.open(image_path)
+
+#         # Resize the image
+#         img = img.resize(new_size)
+
+#         # Display the image
+#         #plt.imshow(img)
+#         #plt.show()
+
+# Load DataFrame from CSV
+df = pd.read_csv('existing_dataframe.csv')  # replace with the path to your CSV file
+
+# Get the list of all image paths and labels
+image_paths = []
+labels = []
+
+
+for i, row in df.iterrows():
+    paths = eval(row['Image_Paths'])  # use eval to convert the string back into a list
+    image_paths.extend([item for sublist in paths for item in sublist])
+    print(image_paths)
+    labels.extend([row['Sur_Name']] * len([item for sublist in paths for item in sublist]))
+
+    # image_paths.append(paths)
+
+
+# Split the data into a training set and a test set
+print(image_paths, len(labels))
+
+train_image_paths, test_image_paths, train_labels, test_labels = train_test_split(image_paths, labels, test_size=0.2, random_state=42)
+
+print(test_labels)
+
+print(f"Number of training images: {len(train_image_paths)}") #Training images
+print(f"Number of test images: {len(test_image_paths)}") #Test images
